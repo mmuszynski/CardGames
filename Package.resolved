@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "CardDeck",
+        "repositoryURL": "https://github.com/mmuszynski/CardDeck",
+        "state": {
+          "branch": null,
+          "revision": "6039ef200ca9cda431786dc1e478f6f4a258e766",
+          "version": "0.0.5"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
