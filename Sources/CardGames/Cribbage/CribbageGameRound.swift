@@ -6,7 +6,15 @@
 //
 
 import Foundation
+import CardDeck
 
-class CribbageGameRound {
+/// A transcript of the game round
+struct CribbageGameRound {
+    var dealer: CardGamePlayer
     
+    var leftHand: CribbageHand
+    var rightHand: CribbageHand
+    var cribHand: CribbageHand
+    
+    var peggingOrder: Array<PlayingCard>
 }

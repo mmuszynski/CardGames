@@ -7,60 +7,60 @@ final class CardGamesTests: XCTestCase {
     }
     
     func testNullHands() {
-        let score0 = Cribbage.score(["AS", "3H", "8H", "9H"], cutCard: "JS")
-        XCTAssertEqual(score0, 0)
+        let nullHand = CribbageHand(["AS", "3H", "8H", "9H"], cut: "JS")
+        XCTAssertEqual(nullHand.score, 0)
     }
     
     func testNobs() {
-        let score1 = Cribbage.score(["AS", "3H", "8H", "JH"], cutCard: "9H")
-        XCTAssertEqual(score1, 1)
+        let nobsHand = CribbageHand(["AS", "3H", "8H", "JH"], cut: "9H")
+        XCTAssertEqual(nobsHand.score, 1)
     }
     
     func testPairs() {
-        let score2 = Cribbage.score(["AS", "3H", "8H", "9H"], cutCard: "9S")
-        XCTAssertEqual(score2, 2)
+        let pairHand = CribbageHand(["AS", "3H", "8H", "9H"], cut: "9S")
+        XCTAssertEqual(pairHand.score, 2)
     }
     
     func testRuns() {
-        let runScore = Cribbage.score(["AS", "3H", "8H", "9H"], cutCard: "10S")
-        XCTAssertEqual(runScore, 3)
+        let runHand = CribbageHand(["AS", "3H", "8H", "9H"], cut: "10S")
+        XCTAssertEqual(runHand.score, 3)
         
-        let runOf4 = Cribbage.score(["AS", "8H", "9H", "10H"], cutCard: "JS")
-        XCTAssertEqual(runOf4, 4)
+        let runOf4Hand = CribbageHand(["AS", "8H", "9H", "10H"], cut: "JS")
+        XCTAssertEqual(runOf4Hand.score, 4)
         
-        let runOf5 = Cribbage.score(["QS", "8H", "9H", "10H"], cutCard: "JS")
-        XCTAssertEqual(runOf5, 5)
+        let runOf5Hand = CribbageHand(["QS", "8H", "9H", "10H"], cut: "JS")
+        XCTAssertEqual(runOf5Hand.score, 5)
         
-        let doubleRunOf3 = Cribbage.score(["7H", "9H", "9S", "10H"], cutCard: "JS")
-        XCTAssertEqual(doubleRunOf3, 8)
+        let doubleRunOfThreeHand = CribbageHand(["7H", "9H", "9S", "10H"], cut: "JS")
+        XCTAssertEqual(doubleRunOfThreeHand.score, 8)
         
-        let doubleRunOf4 = Cribbage.score(["8H", "9H", "9S", "10H"], cutCard: "JS")
-        XCTAssertEqual(doubleRunOf4, 10)
+        let doubleRunOfFourHand = CribbageHand(["8H", "9H", "9S", "10H"], cut: "JS")
+        XCTAssertEqual(doubleRunOfFourHand.score, 10)
     }
     
     func testFifteens() {
-        var score = Cribbage.score(["AS", "3H", "8H", "10H"], cutCard: "5S")
-        XCTAssertEqual(score, 2)
+        var fifteenHand = CribbageHand(["AS", "3H", "8H", "10H"], cut: "5S")
+        XCTAssertEqual(fifteenHand.score, 2)
         
-        score = Cribbage.score(["AS", "2H", "4H", "10H"], cutCard: "7S")
-        XCTAssertEqual(score, 2)
+        fifteenHand = CribbageHand(["AS", "2H", "4H", "10H"], cut: "7S")
+        XCTAssertEqual(fifteenHand.score, 2)
     }
     
     func testFlush() {
-        let flush4 = Cribbage.score(["AS", "3S", "8S", "9S"], cutCard: "JH")
-        let cribFlush4 = Cribbage.score(["AS", "3S", "8S", "9S"], cutCard: "JH", crib: true)
-        XCTAssertEqual(flush4, 4)
-        XCTAssertEqual(cribFlush4, 0)
+        let flush4Hand = CribbageHand(["AS", "3S", "8S", "9S"], cut: "JH")
+        let cribFlush4Hand = CribbageHand(["AS", "3S", "8S", "9S"], cut: "JH", crib: true)
+        XCTAssertEqual(flush4Hand.score, 4)
+        XCTAssertEqual(cribFlush4Hand.score, 0)
         
-        let flush5 = Cribbage.score(["AS", "3S", "8S", "9S"], cutCard: "JS")
-        let cribFlush5 = Cribbage.score(["AS", "3S", "8S", "9S"], cutCard: "JS", crib: true)
-        XCTAssertEqual(flush5, 5)
-        XCTAssertEqual(cribFlush5, 5)
+        let flush5Hand = CribbageHand(["AS", "3S", "8S", "9S"], cut: "JS")
+        let cribFlush5Hand = CribbageHand(["AS", "3S", "8S", "9S"], cut: "JS", crib: true)
+        XCTAssertEqual(flush5Hand.score, 5)
+        XCTAssertEqual(cribFlush5Hand.score, 5)
     }
     
     func test29() {
-        let score29 = Cribbage.score(["5S", "5H", "5D", "JC"], cutCard: "5C")
-        XCTAssertEqual(score29, 29)
+        let highestHand = CribbageHand(["5S", "5H", "5D", "JC"], cut: "5C")
+        XCTAssertEqual(highestHand.score, 29)
     }
     
     static var allTests = [

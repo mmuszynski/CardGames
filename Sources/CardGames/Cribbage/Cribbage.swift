@@ -1,70 +1,27 @@
 import CardDeck
 
-class Cribbage: CardGame {
+/// Cribbage definitions and rules
+///
+/// In Cribbage, the main goal is to make combinations of cards in your hand that satisfy various conditions in order to score points. In a standard game of cribbage, the goal is to score 121 points.
+///
+/// **Rules**
+///
+/// *Setup*
+///
+/// Each player is dealt six cards initially, and sends two to the dealer's "crib," thus creating three hands of four cards each. A final card, which acts as a communal card is cut from a random place in the remaining unused cards (if the cut card turns up a jack, this scores two points to the dealer).
+///
+/// *Pegging*
+///
+/// In this phase, the players alternately lay down cards, adding their value to a running count, scoring for various combinations of cards that have been laid down in order. For example, if a player lays down a card that makes the count reach exactly 15, he scores two points. Similarly, points are scored for runs and pairs, or for reaching the target count of 31.
+///
+/// Players must play a card on their turn so long as they will not exceed the target count of 31. Any player unable to do so declares that their opponent should "go." When neither player may go, the player who played the last card scores one point, in addition to any points they score for the cards they have played. Pegging ends when each player's hand has been exhausted.
+///
+/// *Scoring*
+///
+/// Hands are scored for combinations that produce points, starting with the player who did not deal and ending with the dealer's main hand and crib. See `score(hand:cutCard:crib:)` for a full list of scoring combinations.
+///
+struct Cribbage: CardGame {
     var minimumPlayerCount: Int { return 2 }
-    
-    static func score(_ hand: Deck<PlayingCard>, cutCard: PlayingCard, crib isCrib: Bool = false) -> Int {
-        var count: Int = 0
-        
-        //look for nobs
-        let jacks = hand.filter { $0.rank == .jack }
-        if jacks.map(\.suit).contains(cutCard.suit) {
-            count += 1
-        }
-        
-        let handWithCut = hand + [cutCard]
-        var countedRuns: [Set<PlayingCard>] = []
-        
-        for i in 0..<5 {
-            let numCards = 5 - i
-            let combinations = handWithCut.combinations(ofLength: numCards)
-            
-            //look for fifteens
-            for cards in combinations {
-                let sum = cards.reduce(0) { (result, card) -> Int in
-                    result + Cribbage.numericValue(for: card)
-                }
-                if sum == 15 {
-                    count += 2
-                }
-            }
-            
-            //look for pairs
-            if numCards == 2 {
-                for cards in combinations {
-                    if cards[0].rank == cards[1].rank {
-                        count += 2
-                    }
-                }
-            }
-            
-            //look for runs
-            for cards in combinations {
-                if cards.isSequential {
-                    let newSet = Set(cards)
-                    if countedRuns.filter({ newSet.isSubset(of: $0) }).isEmpty {
-                        countedRuns.append(newSet)
-                    }
-                }
-            }
-        }
-        
-        //sum up the run cards
-        countedRuns = countedRuns.filter { $0.count > 2 }
-        let runPoints = countedRuns.reduce(0, { $0 + $1.count })
-        count += runPoints
-        
-        //check for a flush of five
-        let hasFlushOfFive = Set(handWithCut.map(\.suit)).count == 1
-        let hasFlushOfFour = Set(hand.map(\.suit)).count == 1
-        if hasFlushOfFive {
-            count += 5
-        } else if hasFlushOfFour && !isCrib {
-            count += 4
-        }
-        
-        return count
-    }
     
     static func numericValue(for card: PlayingCard) -> Int {
         switch card.rank {
@@ -91,74 +48,4 @@ class Cribbage: CardGame {
         }
     }
 
-}
-
-extension Deck where Element == PlayingCard {
-//    fileprivate func combinations(ofLength count: Int) -> [[Deck.Element]] {
-//        return ArraySlice(self).combinations(ofLength: count)
-//    }
-    
-    var isSequential: Bool {
-        let ordered = self.map(\.rank).sorted(by: { card1, card2 in
-            let ranks = PlayingCard.Rank.defaultOrder
-            return ranks.firstIndex(of: card1) ?? 0 < ranks.firstIndex(of: card2) ?? 0
-        })
-        let count = self.count
-        
-        let ranks = PlayingCard.Rank.defaultOrder
-        guard let lowest = ordered.first, let lowestIndex = ranks.firstIndex(of: lowest) else { return false }
-        let highest = lowestIndex + count
-        guard highest < ranks.count else { return false }
-        
-        let setA = Set(ranks[lowestIndex..<lowestIndex+count])
-        let setB = Set(ordered)
-        
-        return setA == setB
-    }
-    
-    func combinations(ofLength length: Int) -> [Deck<Element>] {
-        if(self.count == length) {
-            return [self]
-        }
-
-        if(self.isEmpty) {
-            return []
-        }
-
-        if(length == 0) {
-            return []
-        }
-
-        if(length == 1) {
-            return self.map { [$0] }
-        }
-
-        var result : [Deck<Element>] = []
-
-        let rest = Deck(self.suffix(from: 1))
-        let subCombos = rest.combinations(ofLength: length - 1)
-        result += subCombos.map { [self[0]] + $0 }
-        result += rest.combinations(ofLength: length)
-        return result
-    }
-}
-
-extension ArraySlice {
-    //https://stackoverflow.com/questions/25162500/apple-swift-generate-combinations-with-repetition
-    fileprivate func combinations(ofLength count: Int) -> [Array<Element>] {
-        if count == 0 {
-            return [[]]
-        }
-        
-        guard let first = self.first else {
-            return []
-        }
-        
-        let head = [first]
-        let subcombos = self.combinations(ofLength: count - 1)
-        var ret = subcombos.map { head + $0 }
-        ret += self.dropFirst().combinations(ofLength: count)
-        
-        return ret
-    }
 }

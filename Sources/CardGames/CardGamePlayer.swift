@@ -7,6 +7,4 @@
 
 import Foundation
 
-class CardPlayer<Game: CardGame> {
-    
-}
+struct CardGamePlayer: Equatable {}
