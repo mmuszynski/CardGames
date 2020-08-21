@@ -7,14 +7,18 @@
 
 import Foundation
 import CardDeck
+import Combine
 
 class CribbageGame {
+    
+    /// Reserved for making selections
+    /// May be removed in favor of better UI selection
     enum SelectionError: Error {
         case notEnoughCardsSelected
         case tooManyCardsSelected
     }
     
-    //Describes the next action that needs to happen
+    ///Describes the next action that needs to happen in the game
     enum GamePhase {
         case deal
         case discard
@@ -35,12 +39,15 @@ class CribbageGame {
         }
     }
     
+    /// Holds the current phase of the game
     var currentGamePhase: GamePhase = .deal
     
+    /// A transcript of the rounds that have occurred in the game
     var rounds = [CribbageGameRound]()
     
-    var left = CardGamePlayer()
-    var right = CardGamePlayer()
+    /// The players for the game
+    var leftPlayer = CardGamePlayer()
+    var rightPlayer = CardGamePlayer()
     
     var currentLeftHand = PlayingCard.emptyDeck
     var currentRightHand = PlayingCard.emptyDeck
@@ -63,7 +70,7 @@ class CribbageGame {
     //deal new round
     func dealNewCards() {
         var hands: [Deck<PlayingCard>] = isLeftDealer ? [currentRightHand, currentLeftHand] : [currentLeftHand, currentRightHand]
-        drawDeck.deal(4, into: &hands)
+        drawDeck.deal(6, into: &hands)
         self.currentLeftHand = isLeftDealer ? hands[1] : hands[0]
         self.currentRightHand = isLeftDealer ? hands[0] : hands[1]
     }
@@ -75,7 +82,7 @@ class CribbageGame {
     
     //send selected cards to crib
     func sendCardsToCrib(for player: CardGamePlayer) throws {
-        if player == left {
+        if player == leftPlayer {
             if selectedLeftHandCards.count > 2 {
                 throw SelectionError.tooManyCardsSelected
             } else if selectedLeftHandCards.count < 2 {
@@ -86,7 +93,7 @@ class CribbageGame {
         } else {
             if selectedRightHandCards.count > 2 {
                 throw SelectionError.tooManyCardsSelected
-            } else if selectedLeftHandCards.count < 2 {
+            } else if selectedRightHandCards.count < 2 {
                 throw SelectionError.notEnoughCardsSelected
             }
             
@@ -103,7 +110,7 @@ class CribbageGame {
     func pegSelectedCard(for player: CardGamePlayer) throws {
         var selected: PlayingCard!
 
-        if player == left {
+        if player == leftPlayer {
             if selectedLeftHandCards.count < 1 { throw SelectionError.notEnoughCardsSelected }
             if selectedLeftHandCards.count > 1 { throw SelectionError.tooManyCardsSelected }
             
@@ -122,10 +129,10 @@ class CribbageGame {
     func declareGo(for player: CardGamePlayer) {
         pegging.append(.go(player: player))
         
-        if player == left {
-            currentGamePhase = .pegging(for: right)
+        if player == leftPlayer {
+            currentGamePhase = .pegging(for: rightPlayer)
         } else {
-            currentGamePhase = .pegging(for: left)
+            currentGamePhase = .pegging(for: leftPlayer)
         }
     }
     

@@ -7,4 +7,6 @@
 
 import Foundation
 
-struct CardGamePlayer: Equatable {}
+struct CardGamePlayer: Equatable {
+    var uuid = UUID()
+}
