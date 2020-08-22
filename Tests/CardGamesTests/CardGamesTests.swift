@@ -3,8 +3,5 @@ import XCTest
 @testable import CardDeck
 
 final class CardGamesTests: XCTestCase {
-    func testInequality() {
-        XCTAssertNotEqual(CardGamePlayer(), CardGamePlayer())
-    }
     
 }

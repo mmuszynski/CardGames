@@ -9,12 +9,28 @@ import Foundation
 import CardDeck
 
 /// A transcript of the game round
-struct CribbageGameRound {
-    var dealer: CardGamePlayer
+public struct CribbageGameRound {
+    public var dealer: AnyCardGamePlayer
     
-    var leftHand: CribbageHand
-    var rightHand: CribbageHand
-    var cribHand: CribbageHand
+    public var leftHand: CribbageHand
+    public var rightHand: CribbageHand
+    public var cribHand: CribbageHand
     
-    var peggingOrder: Array<PlayingCard>
+    public var cutCard: PlayingCard
+    
+    var pegging: Array<PeggingPlay>
+}
+
+public struct PeggingPlay {
+    public enum PlayType {
+        case card(_ card: PlayingCard)
+        case go
+        
+        public func forPlayer(_ player: AnyCardGamePlayer) -> PeggingPlay {
+            return PeggingPlay(player: player, play: self)
+        }
+    }
+
+    public var player: AnyCardGamePlayer
+    public var play: PlayType
 }

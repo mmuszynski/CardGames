@@ -8,48 +8,101 @@
 import Foundation
 import CardDeck
 
-struct CribbageHand {
+public struct CribbageHand {
     var deck: Deck<PlayingCard>
-    var isCrib: Bool = false
-    var cutCard: PlayingCard
+    public var isCrib: Bool = false
     
-    var fifteens: NestedSet<PlayingCard>
-    var pairs: NestedSet<PlayingCard>
-    var runs: NestedSet<PlayingCard>
-    var flush: Set<PlayingCard>
-    var nobs: Bool = false
+    private var _cutCard: PlayingCard? {
+        didSet {
+            guard _cutCard != nil else {
+                cardCombinations = []
+                return
+            }
+            
+            var combinations = Array<Deck<PlayingCard>>()
+            let handWithCut = deck + [_cutCard!]
+            for i in 1...5 {
+                combinations += handWithCut.combinations(ofLength: i)
+            }
+            
+            cardCombinations = combinations
+        }
+    }
+    private var cardCombinations: Array<Deck<PlayingCard>> = []
+    
+    public func fifteens(with cutCard: PlayingCard) -> Array<Deck<PlayingCard>> {
+        //look for fifteens in combinations of at least two cards
+        let fifteens = cardCombinations.filter { (cards) -> Bool in
+            let sum = cards.reduce(0) { (result, card) -> Int in
+                result + Cribbage.numericValue(for: card)
+            }
+            return sum == 15
+        }
+        
+        return fifteens
+    }
+    
+    public func pairs(with cutCard: PlayingCard) -> Array<Deck<PlayingCard>> {
+        return cardCombinations.filter { $0.count == 2 }.filter({ Set($0.map(\.rank)).count == 1 })
+    }
+    
+    public func runs(with cutCard: PlayingCard) -> Set<Set<PlayingCard>> {
+        //look for runs in combinations of at least three cards
+        var runs = Set<Set<PlayingCard>>()
+        let setsPlus = cardCombinations.filter { $0.count > 2 }.sorted(by: { $1.count > $0.count })
+        
+        for cards in setsPlus {
+            if cards.isSequential {
+                let newSet = Set(cards)
+                if runs.filter({ newSet.isSubset(of: $0) }).isEmpty {
+                    runs.insert(newSet)
+                }
+            }
+        }
+        
+        return runs
+    }
+    
+    public func flush(with cutCard: PlayingCard) -> Set<PlayingCard> {
+        let hand = self.deck
+        let handWithCut = hand + [cutCard]
+        
+        //check for a flush of five
+        let hasFlushOfFive = Set(handWithCut.map(\.suit)).count == 1
+        let hasFlushOfFour = Set(hand.map(\.suit)).count == 1
+        if hasFlushOfFive {
+            return Set(handWithCut)
+        } else if hasFlushOfFour && !self.isCrib {
+            return Set(hand)
+        }
+        
+        return []
+    }
+    public func hasNobs(with cutCard: PlayingCard) -> Bool {
+        let jacks = self.deck.filter { $0.rank == .jack }
+        return jacks.map(\.suit).contains(cutCard.suit)
+    }
 
-    var score: Int {
-        let runPoints = runs.reduce(0, { $0 + $1.count })
-        let fifteenPoints = fifteens.count * 2
-        let pairPoints = pairs.count * 2
-        let flushPoints = flush.count
-        let nobsPoints = nobs ? 1 : 0
+    mutating public func score(with cutCard: PlayingCard) -> Int {
+        self._cutCard = cutCard
+        
+        let runPoints = runs(with: cutCard).reduce(0, { $0 + $1.count })
+        let fifteenPoints = fifteens(with: cutCard).count * 2
+        let pairPoints = pairs(with: cutCard).count * 2
+        let flushPoints = flush(with: cutCard).count
+        let nobsPoints = self.hasNobs(with: cutCard) ? 1 : 0
         
         return runPoints + fifteenPoints + pairPoints + flushPoints + nobsPoints
     }
     
-    init(_ cards: [PlayingCard], cut cutCard: PlayingCard, crib isCrib: Bool = false) {
+    public init(_ cards: [PlayingCard], crib isCrib: Bool = false) {
         self.deck = Deck(cards)
         self.isCrib = isCrib
-        self.cutCard = cutCard
-        
-        self.fifteens = []
-        self.pairs = []
-        self.runs = []
-        self.flush = []
-        
-        let components = CribbageHand.scoringComponents(for: self)
-        self.fifteens = components.fifteens
-        self.pairs = components.pairs
-        self.runs = components.runs
-        self.flush = components.flush
-        self.nobs = components.nobs
     }
     
-    typealias NestedSet<T: Hashable> = Set<Set<T>>
+    public typealias NestedSet<T: Hashable> = Set<Set<T>>
     
-    /// Scores a hand of Cribbage
+    /// Sorts out the scoring components for a hand of cribbage
     ///
     /// Iterates through all combinations of cards, looking for those that satsify scoring conditions as follows:
     ///
@@ -65,68 +118,6 @@ struct CribbageHand {
     ///   - cutCard: The `PlayingCard` selected as the communal cut card
     ///   - isCrib: True if this represents the player's crib cards
     /// - Returns: Scoring components
-    private static func scoringComponents(for hand: CribbageHand) -> (fifteens: NestedSet<PlayingCard>, pairs: NestedSet<PlayingCard>, runs: NestedSet<PlayingCard>, flush: Set<PlayingCard>, nobs: Bool) {
-        var fifteens: NestedSet<PlayingCard> = []
-        var pairs: NestedSet<PlayingCard> = []
-        var runs: NestedSet<PlayingCard> = []
-        var nobs: Bool = false
-        var flush: Set<PlayingCard> = []
-        
-        let handWithCut = hand.deck + [hand.cutCard]
-
-        //look for nobs
-        let jacks = hand.deck.filter { $0.rank == .jack }
-        nobs = jacks.map(\.suit).contains(hand.cutCard.suit)
-        
-        //check for a flush of five
-        let hasFlushOfFive = Set(handWithCut.map(\.suit)).count == 1
-        let hasFlushOfFour = Set(hand.deck.map(\.suit)).count == 1
-        if hasFlushOfFive {
-            flush = Set(handWithCut)
-        } else if hasFlushOfFour && !hand.isCrib {
-            flush = Set(hand.deck)
-        }
-        
-        for i in 0..<5 {
-            let numCards = 5 - i
-            let combinations = handWithCut.combinations(ofLength: numCards)
-            
-            //look for fifteens in combinations of at least two cards
-            if numCards > 1 {
-                for cards in combinations {
-                    let sum = cards.reduce(0) { (result, card) -> Int in
-                        result + Cribbage.numericValue(for: card)
-                    }
-                    if sum == 15 {
-                        fifteens.insert(Set(cards))
-                    }
-                }
-            }
-            
-            //look for pairs in combinations of exactly two cards
-            if numCards == 2 {
-                for cards in combinations {
-                    if cards[0].rank == cards[1].rank {
-                        pairs.insert(Set(cards))
-                    }
-                }
-            }
-            
-            //look for runs in combinations of at least three cards
-            if numCards > 2 {
-                for cards in combinations {
-                    if cards.isSequential {
-                        let newSet = Set(cards)
-                        if runs.filter({ newSet.isSubset(of: $0) }).isEmpty {
-                            runs.insert(newSet)
-                        }
-                    }
-                }
-            }
-        }
-        
-        return (fifteens: fifteens, pairs: pairs, runs: runs, flush: flush, nobs: nobs)
-    }
 }
 
 internal extension Deck where Element == PlayingCard {

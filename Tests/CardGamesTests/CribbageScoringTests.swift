@@ -7,63 +7,63 @@ final class CribbageScoringTests: XCTestCase {
     }
     
     func testNullHands() {
-        let nullHand = CribbageHand(["AS", "3H", "8H", "9H"], cut: "JS")
-        XCTAssertEqual(nullHand.score, 0)
+        let nullHand = CribbageHand(["AS", "3H", "8H", "9H"])
+        XCTAssertEqual(nullHand.score(with: "JS"), 0)
     }
     
     func testNobs() {
-        let nobsHand = CribbageHand(["AS", "3H", "8H", "JH"], cut: "9H")
-        XCTAssertEqual(nobsHand.score, 1)
+        let nobsHand = CribbageHand(["AS", "3H", "8H", "JH"])
+        XCTAssertEqual(nobsHand.score(with: "9H"), 1)
     }
     
     func testPairs() {
-        let pairHand = CribbageHand(["AS", "3H", "8H", "9H"], cut: "9S")
-        XCTAssertEqual(pairHand.score, 2)
+        let pairHand = CribbageHand(["AS", "3H", "8H", "9H"])
+        XCTAssertEqual(pairHand.score(with: "9S"), 2)
     }
     
     func testRuns() {
-        let runHand = CribbageHand(["AS", "3H", "8H", "9H"], cut: "10S")
-        XCTAssertEqual(runHand.score, 3)
+        let runHand = CribbageHand(["AS", "3H", "8H", "9H"])
+        XCTAssertEqual(runHand.score(with: "10S"), 3)
         
-        let runOf4Hand = CribbageHand(["AS", "8H", "9H", "10H"], cut: "JS")
-        XCTAssertEqual(runOf4Hand.score, 4)
+        let runOf4Hand = CribbageHand(["AS", "8H", "9H", "10H"])
+        XCTAssertEqual(runOf4Hand.score(with: "JS"), 4)
         
-        let runOf5Hand = CribbageHand(["QS", "8H", "9H", "10H"], cut: "JS")
-        XCTAssertEqual(runOf5Hand.score, 5)
+        let runOf5Hand = CribbageHand(["QS", "8H", "9H", "10H"])
+        XCTAssertEqual(runOf5Hand.score(with: "JS"), 5)
         
-        let doubleRunOfThreeHand = CribbageHand(["7H", "9H", "9S", "10H"], cut: "JS")
-        XCTAssertEqual(doubleRunOfThreeHand.score, 8)
+        let doubleRunOfThreeHand = CribbageHand(["7H", "9H", "9S", "10H"])
+        XCTAssertEqual(doubleRunOfThreeHand.score(with: "JS"), 8)
         
-        let doubleRunOfFourHand = CribbageHand(["8H", "9H", "9S", "10H"], cut: "JS")
-        XCTAssertEqual(doubleRunOfFourHand.score, 10)
+        let doubleRunOfFourHand = CribbageHand(["8H", "9H", "9S", "10H"])
+        XCTAssertEqual(doubleRunOfFourHand.score(with: "JS"), 10)
     }
     
     func testFifteens() {
-        var fifteenHand = CribbageHand(["AS", "3H", "8H", "10H"], cut: "5S")
-        XCTAssertEqual(fifteenHand.score, 2)
+        let fifteenHand = CribbageHand(["AS", "3H", "8H", "10H"])
+        XCTAssertEqual(fifteenHand.score(with: "5S"), 2)
         
-        fifteenHand = CribbageHand(["AS", "2H", "4H", "10H"], cut: "7S")
-        XCTAssertEqual(fifteenHand.score, 2)
+        fifteenHand = CribbageHand(["AS", "2H", "4H", "10H"])
+        XCTAssertEqual(fifteenHand.score(with: "7S"), 2)
     }
     
     func testFlush() {
-        let flush4Hand = CribbageHand(["AS", "3S", "8S", "9S"], cut: "JH")
-        let cribFlush4Hand = CribbageHand(["AS", "3S", "8S", "9S"], cut: "JH", crib: true)
-        XCTAssertEqual(flush4Hand.score, 4)
-        XCTAssertEqual(cribFlush4Hand.score, 0)
+        let flush4Hand = CribbageHand(["AS", "3S", "8S", "9S"])
+        let cribFlush4Hand = CribbageHand(["AS", "3S", "8S", "9S"])
+        XCTAssertEqual(flush4Hand.score(with: "JH"), 4)
+        XCTAssertEqual(cribFlush4Hand.score(with: "JH"), 0)
         
-        let flush5Hand = CribbageHand(["AS", "3S", "8S", "9S"], cut: "JS")
-        let cribFlush5Hand = CribbageHand(["AS", "3S", "8S", "9S"], cut: "JS", crib: true)
-        XCTAssertEqual(flush5Hand.score, 5)
-        XCTAssertEqual(cribFlush5Hand.score, 5)
+        let flush5Hand = CribbageHand(["AS", "3S", "8S", "9S"])
+        let cribFlush5Hand = CribbageHand(["AS", "3S", "8S", "9S"], crib: true)
+        XCTAssertEqual(flush5Hand.score(with: "JS"), 5)
+        XCTAssertEqual(cribFlush5Hand.score(with: "JS"), 5)
     }
     
     func test29() {
-        let highestHand = CribbageHand(["5S", "5H", "5D", "JC"], cut: "5C")
-        XCTAssertEqual(highestHand.score, 29)
+        let highestHand = CribbageHand(["5S", "5H", "5D", "JC"])
+        XCTAssertEqual(highestHand.score(with: "5C"), 29)
     }
     
-    static var allTests = [
+    static let allTests = [
         ("testExample", testSetup),
     ]
 }

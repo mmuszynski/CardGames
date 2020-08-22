@@ -10,6 +10,11 @@ import CardDeck
 
 class CribbageGame {
     
+    init(leftPlayer: AnyCardGamePlayer, rightPlayer: AnyCardGamePlayer) {
+        self.leftPlayer = leftPlayer
+        self.rightPlayer = rightPlayer
+    }
+    
     /// Reserved for making selections
     /// May be removed in favor of better UI selection
     enum SelectionError: Error {
@@ -22,8 +27,8 @@ class CribbageGame {
         case deal
         case discard
         case cut
-        case pegging(for: CardGamePlayer)
-        case handCount(for: CardGamePlayer)
+        case pegging(for: AnyCardGamePlayer)
+        case handCount(for: AnyCardGamePlayer)
         case cribCount
         
         var maxCardSelection: Int {
@@ -45,8 +50,8 @@ class CribbageGame {
     var rounds = [CribbageGameRound]()
     
     /// The players for the game
-    var leftPlayer = CardGamePlayer()
-    var rightPlayer = CardGamePlayer()
+    var leftPlayer: AnyCardGamePlayer
+    var rightPlayer: AnyCardGamePlayer
     
     var currentLeftHand = PlayingCard.emptyDeck
     var currentRightHand = PlayingCard.emptyDeck
@@ -57,12 +62,7 @@ class CribbageGame {
     var selectedRightHandCards = Set<PlayingCard>()
     
     var currentCutCard: PlayingCard?
-    
-    enum PeggingPlay {
-        case card(_ card: PlayingCard, player: CardGamePlayer)
-        case go(player: CardGamePlayer)
-    }
-    var pegging: [PeggingPlay] = []
+    var currentPegging: [PeggingPlay] = []
     
     var drawDeck = PlayingCard.fullDeck.shuffled()
     
@@ -80,7 +80,7 @@ class CribbageGame {
     }
     
     //send selected cards to crib
-    func sendCardsToCrib(for player: CardGamePlayer) throws {
+    func sendCardsToCrib(for player: AnyCardGamePlayer) throws {
         if player == leftPlayer {
             if selectedLeftHandCards.count > 2 {
                 throw SelectionError.tooManyCardsSelected
@@ -106,7 +106,7 @@ class CribbageGame {
     }
     
     //pegging
-    func pegSelectedCard(for player: CardGamePlayer) throws {
+    func pegSelectedCard(for player: AnyCardGamePlayer) throws {
         var selected: PlayingCard!
 
         if player == leftPlayer {
@@ -121,12 +121,12 @@ class CribbageGame {
             selected = selectedRightHandCards.remove(selectedRightHandCards.first!)
         }
         
-        let play = PeggingPlay.card(selected, player: player)
-        pegging.append(play)
+        let play = PeggingPlay.PlayType.card(selected).forPlayer(player)
+        currentPegging.append(play)
     }
     
-    func declareGo(for player: CardGamePlayer) {
-        pegging.append(.go(player: player))
+    func declareGo(for player: AnyCardGamePlayer) {
+        currentPegging.append(PeggingPlay.PlayType.go.forPlayer(player))
         
         if player == leftPlayer {
             currentGamePhase = .pegging(for: rightPlayer)
