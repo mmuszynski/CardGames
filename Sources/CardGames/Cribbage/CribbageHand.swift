@@ -12,29 +12,21 @@ public struct CribbageHand {
     var deck: Deck<PlayingCard>
     public var isCrib: Bool = false
     
-    private var _cutCard: PlayingCard? {
-        didSet {
-            guard _cutCard != nil else {
-                cardCombinations = []
-                return
-            }
-            
-            var combinations = Array<Deck<PlayingCard>>()
-            let handWithCut = deck + [_cutCard!]
-            for i in 1...5 {
-                combinations += handWithCut.combinations(ofLength: i)
-            }
-            
-            cardCombinations = combinations
+    private func cardCombinations(with cutCard: PlayingCard) -> Array<Deck<PlayingCard>> {
+        var combinations = Array<Deck<PlayingCard>>()
+        let handWithCut = deck + [cutCard]
+        for i in 1...5 {
+            combinations += handWithCut.combinations(ofLength: i)
         }
+        
+        return combinations
     }
-    private var cardCombinations: Array<Deck<PlayingCard>> = []
     
     public func fifteens(with cutCard: PlayingCard) -> Array<Deck<PlayingCard>> {
         //look for fifteens in combinations of at least two cards
-        let fifteens = cardCombinations.filter { (cards) -> Bool in
+        let fifteens = cardCombinations(with: cutCard).filter { (cards) -> Bool in
             let sum = cards.reduce(0) { (result, card) -> Int in
-                result + Cribbage.numericValue(for: card)
+                result + CribbageGame.numericValue(for: card)
             }
             return sum == 15
         }
@@ -43,13 +35,13 @@ public struct CribbageHand {
     }
     
     public func pairs(with cutCard: PlayingCard) -> Array<Deck<PlayingCard>> {
-        return cardCombinations.filter { $0.count == 2 }.filter({ Set($0.map(\.rank)).count == 1 })
+        return cardCombinations(with: cutCard).filter { $0.count == 2 }.filter({ Set($0.map(\.rank)).count == 1 })
     }
     
     public func runs(with cutCard: PlayingCard) -> Set<Set<PlayingCard>> {
         //look for runs in combinations of at least three cards
         var runs = Set<Set<PlayingCard>>()
-        let setsPlus = cardCombinations.filter { $0.count > 2 }.sorted(by: { $1.count > $0.count })
+        let setsPlus = cardCombinations(with: cutCard).filter { $0.count > 2 }.sorted(by: { $1.count < $0.count })
         
         for cards in setsPlus {
             if cards.isSequential {
@@ -78,14 +70,13 @@ public struct CribbageHand {
         
         return []
     }
+    
     public func hasNobs(with cutCard: PlayingCard) -> Bool {
         let jacks = self.deck.filter { $0.rank == .jack }
         return jacks.map(\.suit).contains(cutCard.suit)
     }
 
-    mutating public func score(with cutCard: PlayingCard) -> Int {
-        self._cutCard = cutCard
-        
+    public func score(with cutCard: PlayingCard) -> Int {
         let runPoints = runs(with: cutCard).reduce(0, { $0 + $1.count })
         let fifteenPoints = fifteens(with: cutCard).count * 2
         let pairPoints = pairs(with: cutCard).count * 2

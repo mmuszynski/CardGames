@@ -6,14 +6,13 @@
 //
 
 import Foundation
+import CardDeck
 
 protocol CardGame {
-    var minimumPlayerCount: Int { get }
-    var maximumPlayerCount: Int { get }
+    associatedtype CardType: Card
+    var hands: [CardGameSeat : Deck<CardType>] { get }
 }
 
-extension CardGame {
-    var maximumPlayerCount: Int {
-        return minimumPlayerCount
-    }
+public enum CardGameSeat: Int {
+    case north, northeast, east, southeast, south, southwest, west, northwest
 }

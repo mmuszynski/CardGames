@@ -20,9 +20,7 @@ import CardDeck
 ///
 /// Hands are scored for combinations that produce points, starting with the player who did not deal and ending with the dealer's main hand and crib. See `score(hand:cutCard:crib:)` for a full list of scoring combinations.
 ///
-struct Cribbage: CardGame {
-    var minimumPlayerCount: Int { return 2 }
-    
+extension CribbageGame {
     static func numericValue(for card: PlayingCard) -> Int {
         switch card.rank {
         case .ace:

@@ -39,7 +39,7 @@ final class CribbageScoringTests: XCTestCase {
     }
     
     func testFifteens() {
-        let fifteenHand = CribbageHand(["AS", "3H", "8H", "10H"])
+        var fifteenHand = CribbageHand(["AS", "3H", "8H", "10H"])
         XCTAssertEqual(fifteenHand.score(with: "5S"), 2)
         
         fifteenHand = CribbageHand(["AS", "2H", "4H", "10H"])
@@ -48,7 +48,7 @@ final class CribbageScoringTests: XCTestCase {
     
     func testFlush() {
         let flush4Hand = CribbageHand(["AS", "3S", "8S", "9S"])
-        let cribFlush4Hand = CribbageHand(["AS", "3S", "8S", "9S"])
+        let cribFlush4Hand = CribbageHand(["AS", "3S", "8S", "9S"], crib: true)
         XCTAssertEqual(flush4Hand.score(with: "JH"), 4)
         XCTAssertEqual(cribFlush4Hand.score(with: "JH"), 0)
         

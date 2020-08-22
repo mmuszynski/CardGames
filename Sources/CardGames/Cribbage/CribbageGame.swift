@@ -8,27 +8,23 @@
 import Foundation
 import CardDeck
 
-class CribbageGame {
-    
-    init(leftPlayer: AnyCardGamePlayer, rightPlayer: AnyCardGamePlayer) {
-        self.leftPlayer = leftPlayer
-        self.rightPlayer = rightPlayer
-    }
+public class CribbageGame: CardGame {
+    typealias CardType = PlayingCard
     
     /// Reserved for making selections
     /// May be removed in favor of better UI selection
-    enum SelectionError: Error {
+    public enum SelectionError: Error {
         case notEnoughCardsSelected
         case tooManyCardsSelected
     }
     
     ///Describes the next action that needs to happen in the game
-    enum GamePhase {
+    public enum GamePhase {
         case deal
         case discard
         case cut
-        case pegging(for: AnyCardGamePlayer)
-        case handCount(for: AnyCardGamePlayer)
+        case pegging(for: CardGameSeat)
+        case handCount(for: CardGameSeat)
         case cribCount
         
         var maxCardSelection: Int {
@@ -44,34 +40,46 @@ class CribbageGame {
     }
     
     /// Holds the current phase of the game
-    var currentGamePhase: GamePhase = .deal
+    public var currentGamePhase: GamePhase = .deal
     
     /// A transcript of the rounds that have occurred in the game
-    var rounds = [CribbageGameRound]()
+    public var rounds = [CribbageGameRound]()
     
-    /// The players for the game
-    var leftPlayer: AnyCardGamePlayer
-    var rightPlayer: AnyCardGamePlayer
+    public var hands: [CardGameSeat : Deck<PlayingCard>] = [.north : .empty, .south : .empty]
+    public var currentNorthHand: Deck<PlayingCard> {
+        get {
+            return hands[.north] ?? PlayingCard.emptyDeck
+        }
+        set {
+            hands[.north] = newValue
+        }
+    }
+    public var currentSouthHand: Deck<PlayingCard> {
+        get {
+            return hands[.south] ?? PlayingCard.emptyDeck
+        }
+        set {
+            hands[.south]  = newValue
+        }
+    }
     
-    var currentLeftHand = PlayingCard.emptyDeck
-    var currentRightHand = PlayingCard.emptyDeck
-    var currentCrib = PlayingCard.emptyDeck
-    var isLeftDealer: Bool = true
+    public var currentCrib = PlayingCard.emptyDeck
+    public lazy var currentDealer: CardGameSeat = [.south, .north].randomElement()!
     
-    var selectedLeftHandCards = Set<PlayingCard>()
-    var selectedRightHandCards = Set<PlayingCard>()
+    public var selectedLeftHandCards = Set<PlayingCard>()
+    public var selectedRightHandCards = Set<PlayingCard>()
     
-    var currentCutCard: PlayingCard?
-    var currentPegging: [PeggingPlay] = []
+    public var currentCutCard: PlayingCard?
+    public var currentPegging: [PeggingPlay] = []
     
     var drawDeck = PlayingCard.fullDeck.shuffled()
     
     //deal new round
     func dealNewCards() {
-        var hands: [Deck<PlayingCard>] = isLeftDealer ? [currentRightHand, currentLeftHand] : [currentLeftHand, currentRightHand]
-        drawDeck.deal(6, into: &hands)
-        self.currentLeftHand = isLeftDealer ? hands[1] : hands[0]
-        self.currentRightHand = isLeftDealer ? hands[0] : hands[1]
+        var newHands = [Deck<PlayingCard>](repeating: .empty, count: 2)
+        drawDeck.deal(6, into: &newHands)
+        self.currentNorthHand = currentDealer == .north ? newHands[1] : newHands[0]
+        self.currentSouthHand = currentDealer == .north ? newHands[0] : newHands[1]
     }
     
     private func move(_ cards: Set<PlayingCard>, from: inout Deck<PlayingCard>, to: inout Deck<PlayingCard>) {
@@ -80,15 +88,15 @@ class CribbageGame {
     }
     
     //send selected cards to crib
-    func sendCardsToCrib(for player: AnyCardGamePlayer) throws {
-        if player == leftPlayer {
+    func sendCardsToCrib(for seat: CardGameSeat) throws {
+        if seat == .north {
             if selectedLeftHandCards.count > 2 {
                 throw SelectionError.tooManyCardsSelected
             } else if selectedLeftHandCards.count < 2 {
                 throw SelectionError.notEnoughCardsSelected
             }
             
-            move(selectedLeftHandCards, from: &currentLeftHand, to: &currentCrib)
+            move(selectedLeftHandCards, from: &currentNorthHand, to: &currentCrib)
         } else {
             if selectedRightHandCards.count > 2 {
                 throw SelectionError.tooManyCardsSelected
@@ -96,7 +104,7 @@ class CribbageGame {
                 throw SelectionError.notEnoughCardsSelected
             }
             
-            move(selectedRightHandCards, from: &currentRightHand, to: &currentCrib)
+            move(selectedRightHandCards, from: &currentSouthHand, to: &currentCrib)
         }
     }
     
@@ -106,10 +114,10 @@ class CribbageGame {
     }
     
     //pegging
-    func pegSelectedCard(for player: AnyCardGamePlayer) throws {
+    func pegSelectedCard(for seat: CardGameSeat) throws {
         var selected: PlayingCard!
 
-        if player == leftPlayer {
+        if seat == .north {
             if selectedLeftHandCards.count < 1 { throw SelectionError.notEnoughCardsSelected }
             if selectedLeftHandCards.count > 1 { throw SelectionError.tooManyCardsSelected }
             
@@ -121,17 +129,17 @@ class CribbageGame {
             selected = selectedRightHandCards.remove(selectedRightHandCards.first!)
         }
         
-        let play = PeggingPlay.PlayType.card(selected).forPlayer(player)
+        let play = PeggingPlay(player: seat, play: .card(selected))
         currentPegging.append(play)
     }
     
-    func declareGo(for player: AnyCardGamePlayer) {
-        currentPegging.append(PeggingPlay.PlayType.go.forPlayer(player))
+    func declareGo(for seat: CardGameSeat) {
+        currentPegging.append(PeggingPlay(player: seat, play: .go))
         
-        if player == leftPlayer {
-            currentGamePhase = .pegging(for: rightPlayer)
+        if seat == .north {
+            currentGamePhase = .pegging(for: .south)
         } else {
-            currentGamePhase = .pegging(for: leftPlayer)
+            currentGamePhase = .pegging(for: .north)
         }
     }
     

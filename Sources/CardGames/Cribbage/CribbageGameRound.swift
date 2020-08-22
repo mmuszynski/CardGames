@@ -25,12 +25,8 @@ public struct PeggingPlay {
     public enum PlayType {
         case card(_ card: PlayingCard)
         case go
-        
-        public func forPlayer(_ player: AnyCardGamePlayer) -> PeggingPlay {
-            return PeggingPlay(player: player, play: self)
-        }
     }
 
-    public var player: AnyCardGamePlayer
+    public var player: CardGameSeat
     public var play: PlayType
 }
